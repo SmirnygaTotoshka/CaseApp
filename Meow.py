@@ -15,13 +15,12 @@ if __name__ == '__main__':
         try:
             table_names = QSqlQuery()
             # table_names.addBindValue("spr_")
-            name = "spr_"
-            table_names.prepare("SELECT TABLE_NAME FROM ambulatoryCase.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME LIKE ?")
-            table_names.addBindValue(name + "%")
+            name = "tbl_Patients"
+            table_names.prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?")
+            table_names.addBindValue(name)
             table_names.exec_()
             while (table_names.next()):
                 print(table_names.value(0))
-            print(QSqlDatabase.database())
         except Exception as e:
             print(e)
     else:
