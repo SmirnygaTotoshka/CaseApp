@@ -2,7 +2,7 @@
 import sys
 
 from PyQt5 import QtWidgets
-from PyQt5.QtSql import QSqlDatabase, QSqlQuery
+from PyQt5.QtSql import QSqlDatabase, QSqlQuery, QSqlTableModel
 
 if __name__ == '__main__':
     database = QSqlDatabase.addDatabase("QODBC")
@@ -14,13 +14,15 @@ if __name__ == '__main__':
         print("Success")
         try:
             table_names = QSqlQuery()
-            # table_names.addBindValue("spr_")
-            name = "tbl_Patients"
-            table_names.prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?")
-            table_names.addBindValue(name)
+            name = "spr_Sex"
+            query = "SELECT * FROM "+name + ";"
+            table_names.prepare(query)
+            #table_names.addBindValue("spr_Sex")
             table_names.exec_()
+            values = []
             while (table_names.next()):
-                print(table_names.value(0))
+                values.append(table_names.value(1))
+            print(values)
         except Exception as e:
             print(e)
     else:

@@ -1,11 +1,10 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDateTime
-from PyQt5.QtSql import QSqlQuery, QSqlTableModel
-from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QTableWidgetItem, \
-    QDateTimeEdit, QMessageBox, QAbstractItemView, QAction, QHeaderView
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-import CommonResources
+from PyQt5.QtSql import QSqlQuery, QSqlTableModel
+from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox, QAbstractItemView, QHeaderView
 
+import CommonResources
+from frm_ActionsWithPatients import frm_ActionsWithPatients
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
 
@@ -23,17 +22,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.globalLayout = QGridLayout(self.centralwidget)
-        self.setupFonts()
         self.setupTabWidget()
         self.globalLayout.addWidget(self.tabWidget)
         self.setCentralWidget(self.centralwidget)
 
-
-
-    def setupFonts(self):
-        self.commonTextFont = QtGui.QFont()
-        self.commonTextFont.setFamily("Times New Roman")
-        self.commonTextFont.setPointSize(14)
 
     def setupTabWidget(self):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -42,7 +34,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
         self.tabWidget.setSizePolicy(sizePolicy)
-        self.tabWidget.setFont(self.commonTextFont)
+        self.tabWidget.setFont(CommonResources.commonTextFont)
         self.tabWidget.setObjectName("tabWidget")
 
         self.globalLayout = QVBoxLayout(self.centralwidget)
@@ -55,7 +47,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.tabWidget.addTab(self.tab_Patients,"")
         self.tabWidget.setTabText(0,"Проверить справочники")
         self.tabWidget.setTabText(1,"Пациенты")
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
     def createCheckReferences(self):
         self.tab_checkReferences = QtWidgets.QWidget()
@@ -103,7 +95,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.b_addPatient = QtWidgets.QPushButton(self.tab_Patients)
         self.b_addPatient.setText("Добавить")
-        self.b_addPatient.setFont(self.commonTextFont)
+        self.b_addPatient.setFont(CommonResources.commonTextFont)
         #self.b_addPatient.setGeometry(QtCore.QRect(670, 450, 141, 41))
         self.b_addPatient.setObjectName("addPatient")
         self.b_addPatient.clicked.connect(self.addPatient)
@@ -111,13 +103,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.b_deletePatient = QtWidgets.QPushButton(self.tab_Patients)
         #self.b_deletePatient.setGeometry(QtCore.QRect(10, 420, 291, 51))
         self.b_deletePatient.setText("Удалить")
-        self.b_deletePatient.setFont(self.commonTextFont)
+        self.b_deletePatient.setFont(CommonResources.commonTextFont)
         self.b_deletePatient.clicked.connect(self.deletePatient)
         self.b_deletePatient.setObjectName("deletePatient")
 
         self.b_updatePatient = QtWidgets.QPushButton(self.tab_Patients)
         self.b_updatePatient.setText("Редактировать")
-        self.b_updatePatient.setFont(self.commonTextFont)
+        self.b_updatePatient.setFont(CommonResources.commonTextFont)
         #QWidget.b_updatePatient.setGeometry(QtCore.QRect(10, 480, 291, 51))
         self.b_updatePatient.setObjectName("updatePatient")
         self.b_updatePatient.clicked.connect(self.updatePatient)
@@ -148,12 +140,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.lookup_Patients = QtWidgets.QLineEdit(self.tab_Patients)
         #QWidget.lookup.move(100, 20)
-        self.lookup_Patients.setFont(self.commonTextFont)
+        self.lookup_Patients.setFont(CommonResources.commonTextFont)
         self.lookup_Patients.setPlaceholderText("Поиск")
         self.lookup_Patients.setMaxLength(100)
 
         self.patientTypeLookup = QComboBox()
-        self.patientTypeLookup.addItems(self.getColumns("tbl_Patients"))
+        self.patientTypeLookup.addItems(headers)
         #QWidget.event_type.move(200, 20)
         #self.patientTypeLookup.currentIndexChanged.connect(self.onEventTypeChanged)
         self.patientTypeLookup.setCurrentIndex(0)
@@ -180,7 +172,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.catalogModel.select()
 
     def addPatient(self):
-        pass
+        self.rec = frm_ActionsWithPatients(action = frm_ActionsWithPatients.ADD, model = None, parent = self)
 
     def deletePatient(self):
         pass
