@@ -1,15 +1,35 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtSql import QSqlQuery, QSqlTableModel
+from PyQt5.QtSql import QSqlQuery, QSqlTableModel, QSqlRelationalTableModel
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox, QAbstractItemView, QHeaderView
 
 import CommonResources
-from frm_ActionsWithPatients import frm_ActionsWithPatients
+from frm_ActionsWithData import frm_ActionsWithData
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
+        self.prettyTableNames = {
+            "Пациенты" : "tbl_Patients",
+            "Доктора" : "tbl_Doctors",
+            "Случаи" : "tbl_Case",
+            "Посещения" : "tbl_Visit",
+            "Услуги" : "tbl_Services",
+            "Паспорта" : "tbl_Passports",
+            "Полисы" : "tbl_Polices"
+        }
+        self.headers = {
+            "tbl_Patients" : ["ИД","Фамилия","Имя","Отчество (при наличии)","Пол","Дата рождения","Льготы"
+                                             ,"Занятость","Место работы","Паспорт","СНИЛС","Полис СМО","Семейное положение","Телефон"],
+            "tbl_Doctors" : ["ИД","Фамилия","Имя","Отчество (при наличии)","Пол","Дата рождения","Должность","Специальность","Отделение", "Телефон"],
+            "tbl_Case" : ["ИД","ИД пациента","Тип помощи","Цель","Результат","МКБ-10","Тип заболевания"],
+            "tbl_Visit" : ["ИД","ИД доктора","ИД случая","Дата","Место","Обстоятельства"],
+            "tbl_Services" : ["ИД", "ИД посещения", "Код", "Тип оплаты"],
+            "tbl_Passports" : ["ИД", "Серия/номер", "Адрес"],
+            "tbl_Polices" : ["ИД", "Номер", "СМО"],
+        }
+
         self.commonSetup()
         self.setupTabWidget()
 
@@ -42,11 +62,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.globalLayout.setStretch(0, 0)
         self.globalLayout.addWidget(self.tabWidget)
         self.createCheckReferences()
-        self.createPatientsTab()
+        self.createDataTab()
         self.tabWidget.addTab(self.tab_checkReferences,"")
-        self.tabWidget.addTab(self.tab_Patients,"")
+        self.tabWidget.addTab(self.tab_Data, "")
         self.tabWidget.setTabText(0,"Проверить справочники")
-        self.tabWidget.setTabText(1,"Пациенты")
+        self.tabWidget.setTabText(1,"Данные")
         self.tabWidget.setCurrentIndex(1)
 
     def createCheckReferences(self):
@@ -70,6 +90,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.catalogModel = QSqlTableModel()
         self.catalogModel.setTable(names[0])
         self.tv_checkReferences.setModel(self.catalogModel)
+        self.tv_checkReferences.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tv_checkReferences.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.tv_checkReferences.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tv_checkReferences.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -89,95 +110,107 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         vLayout.addWidget(self.tv_checkReferences)
         self.tab_checkReferences.setLayout(vLayout)
 
-    def createPatientsTab(self):
-        self.tab_Patients = QtWidgets.QWidget()
-        self.tab_Patients.setObjectName("tab_Patients")
+    def createDataTab(self):
+        self.tab_Data = QtWidgets.QWidget()
+        self.tab_Data.setObjectName("tab_Patients")
 
-        self.b_addPatient = QtWidgets.QPushButton(self.tab_Patients)
-        self.b_addPatient.setText("Добавить")
-        self.b_addPatient.setFont(CommonResources.commonTextFont)
-        #self.b_addPatient.setGeometry(QtCore.QRect(670, 450, 141, 41))
-        self.b_addPatient.setObjectName("addPatient")
-        self.b_addPatient.clicked.connect(self.addPatient)
+        self.b_addData = QtWidgets.QPushButton(self.tab_Data)
+        self.b_addData.setText("Добавить")
+        self.b_addData.setFont(CommonResources.commonTextFont)
+        self.b_addData.setObjectName("addPatient")
+        self.b_addData.clicked.connect(self.addData)
 
-        self.b_deletePatient = QtWidgets.QPushButton(self.tab_Patients)
-        #self.b_deletePatient.setGeometry(QtCore.QRect(10, 420, 291, 51))
-        self.b_deletePatient.setText("Удалить")
-        self.b_deletePatient.setFont(CommonResources.commonTextFont)
-        self.b_deletePatient.clicked.connect(self.deletePatient)
-        self.b_deletePatient.setObjectName("deletePatient")
+        self.b_deleteData = QtWidgets.QPushButton(self.tab_Data)
+        self.b_deleteData.setText("Удалить")
+        self.b_deleteData.setFont(CommonResources.commonTextFont)
+        self.b_deleteData.clicked.connect(self.deleteData)
+        self.b_deleteData.setObjectName("deletePatient")
 
-        self.b_updatePatient = QtWidgets.QPushButton(self.tab_Patients)
-        self.b_updatePatient.setText("Редактировать")
-        self.b_updatePatient.setFont(CommonResources.commonTextFont)
-        #QWidget.b_updatePatient.setGeometry(QtCore.QRect(10, 480, 291, 51))
-        self.b_updatePatient.setObjectName("updatePatient")
-        self.b_updatePatient.clicked.connect(self.updatePatient)
+        self.b_updateData = QtWidgets.QPushButton(self.tab_Data)
+        self.b_updateData.setText("Редактировать")
+        self.b_updateData.setFont(CommonResources.commonTextFont)
+        self.b_updateData.setObjectName("updatePatient")
+        self.b_updateData.clicked.connect(self.updateData)
 
-        self.tv_Patients = QtWidgets.QTableView(self.tab_Patients)
-        # self.tv_Patients.setGeometry(QtCore.QRect(100, 200, 1200, 391))
-        self.tv_Patients.setObjectName("tw_checkReferences")
+        self.tv_Data = QtWidgets.QTableView(self.tab_Data)
+        self.tv_Data.setObjectName("tv_Data")
         sizePolicyTable = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicyTable.setHeightForWidth(self.tv_Patients.sizePolicy().hasHeightForWidth())
-        self.tv_Patients.setSizePolicy(sizePolicyTable)
+        sizePolicyTable.setHeightForWidth(self.tv_Data.sizePolicy().hasHeightForWidth())
+        self.tv_Data.setSizePolicy(sizePolicyTable)
 
-        self.patientsModel = QSqlTableModel()
-        self.patientsModel.setTable("tbl_Patients")
-        headers = ["ИД","Фамилия","Имя","Отчество (при наличии)","Пол","Дата рождения","Льготы"
-                                             ,"Занятость","Место работы","Паспорт","СНИЛС","Полис СМО","Семейное положение","Телефон"]
-        for i,h in enumerate(headers):
-            self.patientsModel.setHeaderData(i, Qt.Horizontal,h)
-        self.tv_Patients.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tv_Patients.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tv_Patients.horizontalHeader().setCascadingSectionResizes(True)
-        self.tv_Patients.horizontalHeader().setDefaultSectionSize(200)
-        self.tv_Patients.horizontalHeader().setMinimumSectionSize(100)
-        self.tv_Patients.horizontalHeader().setSortIndicatorShown(True)
-        self.tv_Patients.horizontalHeader().setStretchLastSection(True)
-        self.tv_Patients.verticalHeader().setStretchLastSection(False)
-        self.tv_Patients.setModel(self.patientsModel)
-        self.patientsModel.select()
+        self.dataModel = QSqlRelationalTableModel()
+        self.dataModel.setTable("tbl_Patients")
+        for i,h in enumerate(self.headers["tbl_Patients"]):
+            self.dataModel.setHeaderData(i, Qt.Horizontal, h)
+        self.tv_Data.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tv_Data.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tv_Data.horizontalHeader().setCascadingSectionResizes(True)
+        self.tv_Data.horizontalHeader().setDefaultSectionSize(200)
+        self.tv_Data.horizontalHeader().setMinimumSectionSize(100)
+        self.tv_Data.horizontalHeader().setSortIndicatorShown(True)
+        self.tv_Data.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tv_Data.horizontalHeader().setStretchLastSection(True)
+        self.tv_Data.verticalHeader().setStretchLastSection(False)
+        self.tv_Data.setModel(self.dataModel)
+        self.dataModel.select()
 
-        self.lookup_Patients = QtWidgets.QLineEdit(self.tab_Patients)
-        #QWidget.lookup.move(100, 20)
-        self.lookup_Patients.setFont(CommonResources.commonTextFont)
-        self.lookup_Patients.setPlaceholderText("Поиск")
-        self.lookup_Patients.setMaxLength(100)
+        self.lookup_Data = QtWidgets.QLineEdit(self.tab_Data)
+        self.lookup_Data.setFont(CommonResources.commonTextFont)
+        self.lookup_Data.setPlaceholderText("Поиск")
+        self.lookup_Data.setMaxLength(100)
 
-        self.patientTypeLookup = QComboBox()
-        self.patientTypeLookup.addItems(headers)
-        #QWidget.event_type.move(200, 20)
-        #self.patientTypeLookup.currentIndexChanged.connect(self.onEventTypeChanged)
-        self.patientTypeLookup.setCurrentIndex(0)
+        self.dataTypeLookup = QComboBox()
+        self.dataTypeLookup.addItems(self.headers["tbl_Patients"])
+        #self.dataTypeLookup.currentIndexChanged.connect(self.onEventTypeChanged)
+        self.dataTypeLookup.setCurrentIndex(1)
+
+        self.selectTable = QComboBox()
+        self.selectTable.addItems(list(self.prettyTableNames.keys()))
+        for i,k in enumerate(self.prettyTableNames.keys()):
+            self.selectTable.setItemData(i, self.prettyTableNames[k], Qt.UserRole)
+        self.selectTable.currentIndexChanged.connect(self.onTableChanged)
+        self.selectTable.setCurrentIndex(0)
 
         main_layout = QVBoxLayout()
         up_hLayout = QHBoxLayout()
         down_hLayout = QHBoxLayout()
 
-        up_hLayout.addWidget(self.lookup_Patients)
-        up_hLayout.addWidget(self.patientTypeLookup)
+        up_hLayout.addWidget(self.lookup_Data)
+        up_hLayout.addWidget(self.dataTypeLookup)
 
-        down_hLayout.addWidget(self.b_addPatient)
-        down_hLayout.addWidget(self.b_updatePatient)
-        down_hLayout.addWidget(self.b_deletePatient)
+        down_hLayout.addWidget(self.b_addData)
+        down_hLayout.addWidget(self.b_updateData)
+        down_hLayout.addWidget(self.b_deleteData)
 
+        main_layout.addWidget(self.selectTable)
         main_layout.addLayout(up_hLayout)
-        main_layout.addWidget(self.tv_Patients)
+        main_layout.addWidget(self.tv_Data)
         main_layout.addLayout(down_hLayout)
-        self.tab_Patients.setLayout(main_layout)
+        self.tab_Data.setLayout(main_layout)
 
     def onCatalogChanged(self,index):
         names = self.getTableNames("spr_")
         self.catalogModel.setTable(names[index])
         self.catalogModel.select()
 
-    def addPatient(self):
-        self.rec = frm_ActionsWithPatients(action = frm_ActionsWithPatients.ADD, model = None, parent = self)
+    def onTableChanged(self,index):
+        table_name = self.selectTable.itemData(index,Qt.UserRole)
+        self.dataModel.setTable(table_name)
+        for i, h in enumerate(self.headers[table_name]):
+            self.dataModel.setHeaderData(i, Qt.Horizontal, h)
+        self.tv_Data.setModel(self.dataModel)
+        self.dataModel.select()
+        self.dataTypeLookup.clear()
+        self.dataTypeLookup.addItems(self.headers[table_name])
 
-    def deletePatient(self):
+    def addData(self):
+        table_name = self.selectTable.currentData(Qt.UserRole)
+        self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = table_name,model = None, parent = self)
+
+    def deleteData(self):
         pass
 
-    def updatePatient(self):
+    def updateData(self):
         pass
 
     def getTableNames(self,name:str) -> list:
