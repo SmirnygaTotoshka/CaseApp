@@ -18,7 +18,9 @@ commonTextFont.setPointSize(14)
 only_letter = QRegExp("^[А-Яа-я]{1,50}$")
 snils = QRegExp("^[0-9]{11}$")
 telephone = QRegExp("(^8|7|\+7)((\d{10})|(\s\(\d{3}\)\s\d{3}\s\d{2}\s\d{2}))")
-
+passport_number = QRegExp("^\d{4}\s\d{6}$")
+police_number = QRegExp("^[0-9]{16}$")
+address = QRegExp("[А-Яа-я0-9\\.\\,\s]+")
 def getAllVariantsFromCatalog(catalog,col_index = 1) -> list:
     table_names = QSqlQuery()
     query = "SELECT * FROM "+catalog + ";"

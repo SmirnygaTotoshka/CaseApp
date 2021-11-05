@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtSql import QSqlQuery, QSqlTableModel, QSqlRelationalTableModel
+from PyQt5.QtSql import QSqlQuery, QSqlTableModel, QSqlRelationalTableModel, QSqlRelation
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox, QAbstractItemView, QHeaderView
 
 import CommonResources
@@ -140,8 +140,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.dataModel = QSqlRelationalTableModel()
         self.dataModel.setTable("tbl_Patients")
+        self.dataModel.setEditStrategy(QSqlRelationalTableModel.OnFieldChange)
+        self.dataModel.sort(0, 0)  # DEFAULT SORT TO SEE NEW ITEMS AT END
         for i,h in enumerate(self.headers["tbl_Patients"]):
             self.dataModel.setHeaderData(i, Qt.Horizontal, h)
+
+        self.dataModel.setRelation(self.dataModel.fieldIndex("PassportID"), QSqlRelation('tbl_Passports', 'UniqueID', 'Number'))
+        self.dataModel.setRelation(self.dataModel.fieldIndex("PoliceID"), QSqlRelation('tbl_Polices', 'UniqueID', 'Number'))
         self.tv_Data.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tv_Data.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tv_Data.horizontalHeader().setCascadingSectionResizes(True)
@@ -196,6 +201,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def onTableChanged(self,index):
         table_name = self.selectTable.itemData(index,Qt.UserRole)
         self.dataModel.setTable(table_name)
+        if table_name == "tbl_Polices":
+            index = self.dataModel.fieldIndex("Organization")
+            rel = QSqlRelation('spr_SMO', 'ID', 'NAM_SMOP')
+            self.dataModel.setRelation(index,rel)
         for i, h in enumerate(self.headers[table_name]):
             self.dataModel.setHeaderData(i, Qt.Horizontal, h)
         self.tv_Data.setModel(self.dataModel)
@@ -203,9 +212,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.dataTypeLookup.clear()
         self.dataTypeLookup.addItems(self.headers[table_name])
 
+
     def addData(self):
         table_name = self.selectTable.currentData(Qt.UserRole)
-        self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = table_name,model = None, parent = self)
+        self.setVisible(False)
+        self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = table_name,model = self.dataModel, parent = self)
 
     def deleteData(self):
         pass

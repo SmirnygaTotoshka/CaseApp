@@ -10,7 +10,7 @@ class frm_SelectRecord(QMainWindow):
 
     def __init__(self,table_name:str,pretty_name:str, parent = None):
         super(frm_SelectRecord, self).__init__(parent)
-
+        self.parent = parent
         self.headers = {
             "tbl_Patients": ["ИД", "Фамилия", "Имя", "Отчество (при наличии)", "Пол", "Дата рождения", "Льготы"
                 , "Занятость", "Место работы", "Паспорт", "СНИЛС", "Полис СМО", "Семейное положение", "Телефон"],
