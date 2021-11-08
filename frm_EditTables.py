@@ -201,6 +201,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def onTableChanged(self,index):
         table_name = self.selectTable.itemData(index,Qt.UserRole)
         self.dataModel.setTable(table_name)
+        if table_name == "tbl_Doctors":
+            index = self.dataModel.fieldIndex("Sex")
+            rel = QSqlRelation('spr_Sex', 'ID', 'NAME')
+            self.dataModel.setRelation(index, rel)
+
+            index = self.dataModel.fieldIndex("Position")
+            rel = QSqlRelation('spr_Positions', 'ID', 'NAME')
+            self.dataModel.setRelation(index, rel)
+
+            index = self.dataModel.fieldIndex("Speciality")
+            rel = QSqlRelation('spr_Speciality', 'ID', 'NAME')
+            self.dataModel.setRelation(index, rel)
+
+            index = self.dataModel.fieldIndex("Department")
+            rel = QSqlRelation('spr_Departments', 'ID', 'NAME')
+            self.dataModel.setRelation(index, rel)
+
         if table_name == "tbl_Polices":
             index = self.dataModel.fieldIndex("Organization")
             rel = QSqlRelation('spr_SMO', 'ID', 'NAM_SMOP')
@@ -215,7 +232,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def addData(self):
         table_name = self.selectTable.currentData(Qt.UserRole)
-        self.setVisible(False)
+        self.switchEnablingEditingActions(False)
         self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = table_name,model = self.dataModel, parent = self)
 
     def deleteData(self):
@@ -241,3 +258,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             s = table_names.value(0)
             names.append(s)
         return names
+
+    def switchEnablingEditingActions(self,flag):
+        self.b_addData.setEnabled(flag)
+        self.b_deleteData.setEnabled(flag)
+        self.b_updateData.setEnabled(flag)
+        self.selectTable.setEnabled(flag)

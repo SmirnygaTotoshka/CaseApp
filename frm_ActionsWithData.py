@@ -104,7 +104,56 @@ class frm_ActionsWithData(QMainWindow):
         add.bindValue("",)
 
     def saveDoctor(self):
-        pass
+        if len(self.Sirname.text()) == 0:
+            QMessageBox.warning(self, "Ошибка", "Введите фамилию.", QMessageBox.Ok)
+            self.Sirname.setFocus()
+            return False
+        if len(self.Name.text()) == 0:
+            QMessageBox.warning(self, "Ошибка", "Введите имя.", QMessageBox.Ok)
+            self.Name.setFocus()
+            return False
+        if len(self.telephone.text()) < 12:
+            QMessageBox.warning(self, "Ошибка", "Введите телефон.", QMessageBox.Ok)
+            self.telephone.setFocus()
+            return False
+        q = "INSERT INTO tbl_Doctors VALUES(:sirname,:name,:secondname,:sex,CAST(:birthday AS date),:pos,:spec,:dep,:tel)"
+        query = QSqlQuery()
+        if not query.prepare(q):
+            QMessageBox.warning(self, "Ошибка", query.lastError().text(), QMessageBox.Ok)
+            print(query.lastQuery())
+            return False
+        query.bindValue(":sirname",self.Sirname.text())
+        query.bindValue(":name",self.Name.text())
+        query.bindValue(":secondname",self.SecondName.text())
+
+        key = self.getPrimaryKey("spr_Sex", "NAME", self.sex.itemText(self.sex.currentIndex()))
+        if key is not None:
+            query.bindValue(":sex",key[0])
+
+        query.bindValue(":birthday",self.birthday.date().toString("yyyyMMdd"))
+
+        key = self.getPrimaryKey("spr_Positions", "NAME", self.position.itemText(self.position.currentIndex()))
+        if key is not None:
+            query.bindValue(":pos",key[0])
+
+        key = self.getPrimaryKey("spr_Speciality", "NAME", self.speciality.itemText(self.speciality.currentIndex()))
+        if key is not None:
+            query.bindValue(":spec",key[0])
+
+        key = self.getPrimaryKey("spr_Departments", "NAME", self.department.itemText(self.department.currentIndex()))
+        if key is not None:
+            query.bindValue(":dep",key[0])
+
+        query.bindValue(":tel",self.telephone.text())
+        f = query.exec()
+        if f:
+            QMessageBox.information(self, self.windowTitle(), "Успешно", QMessageBox.Ok)
+            self.model.submitAll()
+            self.model.select()
+        else:
+            QMessageBox.information(self, self.windowTitle(), query.lastError().text(), QMessageBox.Ok)
+            self.model.revertAll()
+        return f
 
     def saveCase(self):
         pass
@@ -139,7 +188,6 @@ class frm_ActionsWithData(QMainWindow):
             return False
 
     def savePolices(self):
-        q = QMessageBox.Yes
         if len(self.police_number.text()) != 16:
             QMessageBox.warning(self, "Ошибка", "Введите корректный номер полиса.", QMessageBox.Ok)
             return False
@@ -339,7 +387,7 @@ class frm_ActionsWithData(QMainWindow):
 
         self.telephone = QLineEdit()
         self.telephone.setFont(CommonResources.commonTextFont)
-        self.telephone.setMaxLength(11)  # TODO - pretty print
+        self.telephone.setMaxLength(12)  # TODO - pretty print
         self.telephone.setValidator(QRegExpValidator(CommonResources.telephone, self.telephone))
         self.telephone.setObjectName("telephone")
         self.form.addRow(title, self.telephone)
@@ -450,7 +498,7 @@ class frm_ActionsWithData(QMainWindow):
 
         self.telephone = QLineEdit()
         self.telephone.setFont(CommonResources.commonTextFont)
-        self.telephone.setMaxLength(11)  # TODO - pretty print
+        self.telephone.setMaxLength(12)  # TODO - pretty print
         self.telephone.setValidator(QRegExpValidator(CommonResources.telephone, self.telephone))
         self.telephone.setObjectName("telephone")
         self.form.addRow(title, self.telephone)
@@ -741,4 +789,5 @@ class frm_ActionsWithData(QMainWindow):
         self.form.setSpacing(20)
 
     def closeEvent(self, event):
-        self.parent.setVisible(True)
+        self.parent.switchEnablingEditingActions(True)#TODO dangerous
+    #self.parent.switc(True)

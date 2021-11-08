@@ -90,6 +90,9 @@ class frm_SelectRecord(QMainWindow):
 
         self.show()
 
+    def switchEnablingEditingActions(self,flag):
+        self.b_addData.setEnabled(flag)
+
     def addData(self):
         pass
 
