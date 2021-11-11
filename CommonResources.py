@@ -17,7 +17,7 @@ commonTextFont.setPointSize(14)
 
 only_letter = QRegExp("^[А-Яа-я]{1,50}$")
 snils = QRegExp("^[0-9]{11}$")
-telephone = QRegExp("^\+79\d{10}$")
+telephone = QRegExp("^\\+79\d{10}$")
 passport_number = QRegExp("^\d{4}\s\d{6}$")
 police_number = QRegExp("^[0-9]{16}$")
 address = QRegExp("[А-Яа-я0-9\\.\\,\s]+")

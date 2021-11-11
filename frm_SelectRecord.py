@@ -1,9 +1,10 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtSql import QSqlRelationalTableModel
-from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QComboBox, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QAbstractItemView, QComboBox, QHBoxLayout, QVBoxLayout, QMessageBox, QLabel
 
 import CommonResources
+from InfoWidget import InfoAfterSelectWidget
 
 
 class frm_SelectRecord(QMainWindow):
@@ -25,7 +26,7 @@ class frm_SelectRecord(QMainWindow):
         self.setWindowTitle(pretty_name)
         self.widget = QtWidgets.QWidget()
         self.setGeometry(200, 100, CommonResources.screen_width-200, CommonResources.screen_height-200)
-
+        self.table_name = table_name
 
         self.b_addData = QtWidgets.QPushButton(self.widget)
         self.b_addData.setText("Добавить")
@@ -92,12 +93,38 @@ class frm_SelectRecord(QMainWindow):
 
     def switchEnablingEditingActions(self,flag):
         self.b_addData.setEnabled(flag)
+        self.b_selectData.setEnabled(flag)
 
     def addData(self):
+        #self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = self.dataModel,model = self.dataModel, parent = self)
+        #self.switchEnablingEditingActions(False)
         pass
 
     def selectData(self):
-        pass
+        if self.tv_Data.selectionModel().hasSelection():
+            if self.table_name == "tbl_Passports":
+                row = self.tv_Data.selectionModel().selectedRows()
+                passport = self.dataModel.data(self.dataModel.index(row[0].row(), 1))
+                self.parent.selected_passport = InfoAfterSelectWidget(text = passport)
+                self.parent.selected_passport.change.clicked.connect(self.parent.addPassport)
+                self.parent.form.removeRow(9)
+                title = QLabel("Паспорт")
+                title.setFont(CommonResources.commonTextFont)
+                self.parent.form.insertRow(9,title, self.parent.selected_passport)
+                self.close()
+            elif self.table_name == "tbl_Polices":
+                row = self.tv_Data.selectionModel().selectedRows()
+                police = self.dataModel.data(self.dataModel.index(row[0].row(), 1))
+                self.parent.selected_police = InfoAfterSelectWidget(text=police)
+                self.parent.selected_police.change.clicked.connect(self.parent.addPolice)
+                self.parent.form.removeRow(11)
+                title = QLabel("Паспорт")
+                title.setFont(CommonResources.commonTextFont)
+                self.parent.form.insertRow(11, title, self.parent.selected_police)
+                self.close()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Выберите запись", QMessageBox.Ok)
+
 
 
 

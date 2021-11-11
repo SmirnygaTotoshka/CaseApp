@@ -140,13 +140,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.dataModel = QSqlRelationalTableModel()
         self.dataModel.setTable("tbl_Patients")
+        fIndex = ["Sex","Priviledge","Employment","PassportID", "PoliceID","FamilyStatus"]
+        spr = ['spr_Sex',"spr_Priviledge","spr_Employment","tbl_Passports","tbl_Polices","spr_FamilyStatus"]
+        cols = ["NAME","NAME","NAME","Number", "Number","NAME"]
+        self.setRelations(fIndex, spr, cols)
         self.dataModel.setEditStrategy(QSqlRelationalTableModel.OnFieldChange)
         self.dataModel.sort(0, 0)  # DEFAULT SORT TO SEE NEW ITEMS AT END
         for i,h in enumerate(self.headers["tbl_Patients"]):
             self.dataModel.setHeaderData(i, Qt.Horizontal, h)
 
-        self.dataModel.setRelation(self.dataModel.fieldIndex("PassportID"), QSqlRelation('tbl_Passports', 'UniqueID', 'Number'))
-        self.dataModel.setRelation(self.dataModel.fieldIndex("PoliceID"), QSqlRelation('tbl_Polices', 'UniqueID', 'Number'))
         self.tv_Data.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tv_Data.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tv_Data.horizontalHeader().setCascadingSectionResizes(True)
@@ -201,27 +203,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def onTableChanged(self,index):
         table_name = self.selectTable.itemData(index,Qt.UserRole)
         self.dataModel.setTable(table_name)
+        if table_name == "tbl_Patients":
+            fIndex = ["Sex", "Priviledge", "Employment", "PassportID", "PoliceID", "FamilyStatus"]
+            spr = ['spr_Sex', "spr_Priviledge", "spr_Employment", "tbl_Passports", "tbl_Polices", "spr_FamilyStatus"]
+            cols = ["NAME", "NAME", "NAME", "Number", "Number", "NAME"]
+            self.setRelations(fIndex, spr, cols)
         if table_name == "tbl_Doctors":
-            index = self.dataModel.fieldIndex("Sex")
-            rel = QSqlRelation('spr_Sex', 'ID', 'NAME')
-            self.dataModel.setRelation(index, rel)
-
-            index = self.dataModel.fieldIndex("Position")
-            rel = QSqlRelation('spr_Positions', 'ID', 'NAME')
-            self.dataModel.setRelation(index, rel)
-
-            index = self.dataModel.fieldIndex("Speciality")
-            rel = QSqlRelation('spr_Speciality', 'ID', 'NAME')
-            self.dataModel.setRelation(index, rel)
-
-            index = self.dataModel.fieldIndex("Department")
-            rel = QSqlRelation('spr_Departments', 'ID', 'NAME')
-            self.dataModel.setRelation(index, rel)
+            fIndex = ["Sex","Position","Speciality","Department"]
+            spr = ['spr_Sex','spr_Positions','spr_Speciality','spr_Departments']
+            cols = ['NAME']*4
+            self.setRelations(fIndex,spr,cols)
 
         if table_name == "tbl_Polices":
-            index = self.dataModel.fieldIndex("Organization")
-            rel = QSqlRelation('spr_SMO', 'ID', 'NAM_SMOP')
-            self.dataModel.setRelation(index,rel)
+            self.setRelations(["Organization"], ['spr_SMO'], ['NAM_SMOP'])
+
         for i, h in enumerate(self.headers[table_name]):
             self.dataModel.setHeaderData(i, Qt.Horizontal, h)
         self.tv_Data.setModel(self.dataModel)
@@ -236,7 +231,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.rec = frm_ActionsWithData(action = frm_ActionsWithData.ADD, table_name = table_name,model = self.dataModel, parent = self)
 
     def deleteData(self):
-        pass
+        rows = self.tv_Data.selectionModel().selectedRows()
+        for r in rows:
+            self.dataModel.deleteRowFromTable(r.row())
+        self.dataModel.select()
 
     def updateData(self):
         pass
@@ -264,3 +262,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.b_deleteData.setEnabled(flag)
         self.b_updateData.setEnabled(flag)
         self.selectTable.setEnabled(flag)
+
+    def setRelations(self, fieldIndex, table_name, col_name):
+        for f,t,c in zip(fieldIndex,table_name,col_name):
+            index = self.dataModel.fieldIndex(f)
+            rel = QSqlRelation(t, 'ID', c)
+            self.dataModel.setRelation(index, rel)
