@@ -17,11 +17,11 @@ def savePatient(self, action):
         return False
     if self.selected_passport is None:
         QMessageBox.warning(self, "Ошибка", "Выберите паспорт.", QMessageBox.Ok)
-        self.telephone.setFocus()
+        self.passport.setFocus()
         return False
     if self.selected_police is None:
         QMessageBox.warning(self, "Ошибка", "Выберите полис.", QMessageBox.Ok)
-        self.telephone.setFocus()
+        self.police.setFocus()
         return False
     query = "INSERT INTO tbl_Patients (Sirname,Name, SecondName, Sex, Birthday, Priviledge, Employment, Workplace," + \
             "PassportID,SnilsID,PoliceID,FamilyStatus,Telephone) VALUES (:Sirname,:Name, :SecondName, :Sex, CAST(:Birthday AS date), :Priviledge, :Employment, :Workplace," + \
@@ -139,15 +139,109 @@ def saveDoctor(self, action):
 
 
 def saveCase(self, action):
-    pass
+    if self.selected_patient is None:
+        QMessageBox.warning(self, "Ошибка", "Выберите пациента.", QMessageBox.Ok)
+        self.patient.setFocus()
+        return False
+    rowCount = self.model.rowCount()
+    self.model.insertRows(rowCount, 1)
+    self.model.setData(self.model.index(rowCount, 1), int(self.selected_patient.getText().split(" ")[0]))
+
+    key = getPrimaryKey(self, "spr_AidType", "NAME", self.aid_type.itemText(self.aid_type.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 2), key[0])
+
+    key = getPrimaryKey(self, "spr_Purpose", "NAME", self.purpose.itemText(self.purpose.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 3), key[0])
+
+    key = getPrimaryKey(self, "spr_Result", "NAME", self.result.itemText(self.result.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 4), key[0])
+
+    key = getPrimaryKey(self, "spr_MKB", "MKB_NAME", self.mkb.itemText(self.mkb.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 5), key[0])
+
+    key = getPrimaryKey(self, "spr_DiseaseType", "NAME", self.disease_type.itemText(self.disease_type.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 6), key[0])
+
+    f = self.model.submitAll()
+    if f:
+        QMessageBox.information(self, self.windowTitle(), "Успешно", QMessageBox.Ok)
+        self.model.select()
+    else:
+        QMessageBox.warning(self, self.windowTitle(), "Запись не добавлена\n" + self.model.lastError().text(),
+                            QMessageBox.Ok)
+        self.model.revertAll()
+    return f
 
 
 def saveVisit(self, action):
-    pass
+    if self.selected_doctor is None:
+        QMessageBox.warning(self, "Ошибка", "Выберите врача.", QMessageBox.Ok)
+        self.doctor.setFocus()
+        return False
+    if self.selected_case is None:
+        QMessageBox.warning(self, "Ошибка", "Выберите случай.", QMessageBox.Ok)
+        self.case.setFocus()
+        return False
+    q = "INSERT INTO tbl_Visit VALUES(:doctorID,:caseID,CAST(:d AS date),:place,:circ)"
+    query = QSqlQuery()
+    if not query.prepare(q):
+        QMessageBox.warning(self, "Ошибка", query.lastError().text(), QMessageBox.Ok)
+        print(query.lastQuery())
+        return False
+    query.bindValue(":doctorID", int(self.selected_doctor.getText().split(" ")[0]))
+    query.bindValue(":caseID", int(self.selected_case.getText()))
+    query.bindValue(":d", self.date.date().toString("yyyyMMdd"))
+
+    key = getPrimaryKey(self, "spr_VisitPlace", "NAME", self.visit_place.itemText(self.visit_place.currentIndex()))
+    if key is not None:
+        query.bindValue(":place", key[0])
+
+    key = getPrimaryKey(self, "spr_VisitCircumstances", "NAME", self.visit_circumstances.itemText(self.visit_circumstances.currentIndex()))
+    if key is not None:
+        query.bindValue(":circ", key[0])
+
+    f = query.exec()
+    if f:
+        QMessageBox.information(self, self.windowTitle(), "Успешно", QMessageBox.Ok)
+        self.model.submitAll()
+        self.model.select()
+    else:
+        QMessageBox.information(self, self.windowTitle(), query.lastError().text(), QMessageBox.Ok)
+        self.model.revertAll()
+    return f
 
 
 def saveServices(self, action):
-    pass
+    if self.selected_visit is None:
+        QMessageBox.warning(self, "Ошибка", "Выберите посещение.", QMessageBox.Ok)
+        self.visit.setFocus()
+        return False
+    rowCount = self.model.rowCount()
+    self.model.insertRows(rowCount, 1)
+    self.model.setData(self.model.index(rowCount, 1), int(self.selected_visit.getText()))
+
+    key = getPrimaryKey(self, "spr_CodeServices", "NAME", self.service.itemText(self.service.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 2), key[0])
+
+    key = getPrimaryKey(self, "spr_PaymentType", "FULL_NAME", self.payment_type.itemText(self.payment_type.currentIndex()))
+    if key is not None:
+        self.model.setData(self.model.index(rowCount, 3), key[0])
+
+    f = self.model.submitAll()
+    if f:
+        QMessageBox.information(self, self.windowTitle(), "Успешно", QMessageBox.Ok)
+        self.model.select()
+    else:
+        QMessageBox.warning(self, self.windowTitle(), "Запись не добавлена\n" + self.model.lastError().text(),
+                            QMessageBox.Ok)
+        self.model.revertAll()
+    return f
 
 
 def savePassports(self, action):

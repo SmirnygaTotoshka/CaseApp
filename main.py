@@ -6,7 +6,8 @@ import sys
 
 from PyQt5 import QtWidgets
 import CommonResources
-from frm_EditTables import Ui_MainWindow
+from forms import frm_MainWindow
+
 
 def init_res(app):
     CommonResources.screen = app.primaryScreen()
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     if CommonResources.database.open():
         app = QtWidgets.QApplication(sys.argv)
         init_res(app)
-        window = Ui_MainWindow()
+        window = frm_MainWindow()
         window.show()
         sys.exit(app.exec_())
     else:

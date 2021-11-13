@@ -11,6 +11,9 @@ screen = None
 screen_width = 0
 screen_height = 0
 
+ADD = 1
+UPDATE = 2
+
 commonTextFont = QtGui.QFont()
 commonTextFont.setFamily("Times New Roman")
 commonTextFont.setPointSize(14)

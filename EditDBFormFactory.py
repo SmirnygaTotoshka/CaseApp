@@ -1,10 +1,23 @@
+from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QDateEdit, QComboBox, QCheckBox
 
 import CommonResources
+from InfoWidget import InfoAfterSelectWidget
 
+
+def getSelectedData(self):
+    rows = self.parent.tv_Data.selectionModel().selectedRows()
+    attr = []
+    for r in rows:
+        for c in range(self.parent.dataModel.columnCount()):
+            attr.append(self.parent.dataModel.data(self.parent.dataModel.index(r.row(),c)))
+    return attr
 
 def createPatientForm(self, action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
+
     title = QLabel("Фамилия")
     title.setFont(CommonResources.commonTextFont)
 
@@ -14,6 +27,8 @@ def createPatientForm(self, action):
     self.Sirname.setValidator(QRegExpValidator(CommonResources.only_letter, self.Sirname))
     self.Sirname.setObjectName("Sirname")
     self.Sirname.textEdited.connect(self.SirnamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.Sirname.setText(selected_data[1])
     self.form.addRow(title, self.Sirname)
 
     title = QLabel("Имя")
@@ -25,6 +40,8 @@ def createPatientForm(self, action):
     self.Name.setValidator(QRegExpValidator(CommonResources.only_letter, self.Name))
     self.Name.setObjectName("Name")
     self.Name.textEdited.connect(self.NamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.Name.setText(selected_data[2])
     self.form.addRow(title, self.Name)
 
     title = QLabel("Отчество (при наличии)")
@@ -36,6 +53,8 @@ def createPatientForm(self, action):
     self.SecondName.setValidator(QRegExpValidator(CommonResources.only_letter, self.SecondName))
     self.SecondName.setObjectName("SecondName")
     self.SecondName.textEdited.connect(self.SecondNamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.SecondName.setText(selected_data[3])
     self.form.addRow(title, self.SecondName)
 
     title = QLabel("Пол")
@@ -47,6 +66,10 @@ def createPatientForm(self, action):
     self.sex.setObjectName("sex")
     self.sex.setFixedWidth(600)
     self.sex.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.sex.findText(selected_data[4], Qt.MatchFixedString)
+        if i >= 0:
+            self.sex.setCurrentIndex(i)
     self.form.addRow(title, self.sex)
 
     title = QLabel("Дата рождения")
@@ -58,6 +81,9 @@ def createPatientForm(self, action):
     self.birthday.setDate(curDateTime.addYears(-18))
     self.birthday.setObjectName("birthday")
     self.birthday.setCalendarPopup(True)
+    if action == CommonResources.UPDATE:
+        dates = list(map(int,selected_data[5].split("-")))
+        self.birthday.setDate(QDate(dates[0],dates[1], dates[2]))
     self.form.addRow(title, self.birthday)
 
     self.has_priveledge = QCheckBox()
@@ -82,6 +108,11 @@ def createPatientForm(self, action):
     self.priviledge.setObjectName("priveledge")
     self.priviledge.setCurrentIndex(0)
     self.form.addRow(title, self.priviledge)
+    if action == CommonResources.UPDATE and selected_data[6] != "Нет льгот":
+        self.has_priveledge.setChecked(True)
+        i = self.priviledge.findText(selected_data[6], Qt.MatchFixedString)
+        if i >= 0:
+            self.priviledge.setCurrentIndex(i)
 
     title = QLabel("Занятость")
     title.setFont(CommonResources.commonTextFont)
@@ -92,6 +123,10 @@ def createPatientForm(self, action):
     self.employment.setFont(CommonResources.commonTextFont)
     self.employment.setObjectName("employment")
     self.employment.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.employment.findText(selected_data[7], Qt.MatchFixedString)
+        if i >= 0:
+            self.employment.setCurrentIndex(i)
     self.form.addRow(title, self.employment)
 
     title = QLabel("Место работы")
@@ -101,19 +136,24 @@ def createPatientForm(self, action):
     self.workplace.setFont(CommonResources.commonTextFont)
     self.workplace.setMaxLength(50)
     self.workplace.setObjectName("workplace")
+    if action == CommonResources.UPDATE:
+        self.workplace.setText(selected_data[8])
     self.form.addRow(title, self.workplace)
 
     title = QLabel("Паспорт")
     title.setFont(CommonResources.commonTextFont)
-
-    self.passport = QPushButton()
-    self.passport.setText("Добавить")  # TODO - проверка на наличие
-    self.passport.setFont(CommonResources.commonTextFont)
-    self.passport.setObjectName("addPassport")
-    self.passport.clicked.connect(self.addPassport)
-    self.form.addRow(title, self.passport)
-
-    self.selected_passport = None
+    if action == CommonResources.UPDATE:
+        self.selected_passport = InfoAfterSelectWidget(text=selected_data[9])
+        self.selected_passport.change.clicked.connect(self.selectPassport)
+        self.form.addRow(title, self.selected_passport)
+    else:
+        self.passport = QPushButton()
+        self.passport.setText("Добавить")  # TODO - проверка на наличие
+        self.passport.setFont(CommonResources.commonTextFont)
+        self.passport.setObjectName("addPassport")
+        self.passport.clicked.connect(self.selectPassport)
+        self.form.addRow(title, self.passport)
+        self.selected_passport = None
 
     title = QLabel("СНИЛС")
     title.setFont(CommonResources.commonTextFont)
@@ -123,19 +163,25 @@ def createPatientForm(self, action):
     self.snils.setMaxLength(11)  # TODO - pretty print
     self.snils.setValidator(QRegExpValidator(CommonResources.snils, self.snils))
     self.snils.setObjectName("snils")
+    if action == CommonResources.UPDATE:
+        self.snils.setText(selected_data[10])
     self.form.addRow(title, self.snils)
 
     title = QLabel("Полис")
     title.setFont(CommonResources.commonTextFont)
 
-    self.police = QPushButton()
-    self.police.setText("Добавить")  # TODO - проверка на наличие
-    self.police.setFont(CommonResources.commonTextFont)
-    self.police.setObjectName("police")
-    self.police.clicked.connect(self.addPolice)
-    self.form.addRow(title, self.police)
-
-    self.selected_police = None
+    if action == CommonResources.UPDATE:
+        self.selected_police = InfoAfterSelectWidget(text=selected_data[11])
+        self.selected_police.change.clicked.connect(self.selectPolice)
+        self.form.addRow(title, self.selected_police)
+    else:
+        self.police = QPushButton()
+        self.police.setText("Добавить")  # TODO - проверка на наличие
+        self.police.setFont(CommonResources.commonTextFont)
+        self.police.setObjectName("police")
+        self.police.clicked.connect(self.selectPolice)
+        self.form.addRow(title, self.police)
+        self.selected_police = None
 
     title = QLabel("Семейное\nположение")
     title.setFont(CommonResources.commonTextFont)
@@ -145,6 +191,10 @@ def createPatientForm(self, action):
     self.family_status.setMaximumWidth(500)
     self.family_status.setFont(CommonResources.commonTextFont)
     self.family_status.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.family_status.findText(selected_data[12], Qt.MatchFixedString)
+        if i >= 0:
+            self.family_status.setCurrentIndex(i)
     self.family_status.setObjectName("family_status")
     self.form.addRow(title, self.family_status)
 
@@ -156,6 +206,8 @@ def createPatientForm(self, action):
     self.telephone.setMaxLength(12)  # TODO - pretty print
     self.telephone.setValidator(QRegExpValidator(CommonResources.telephone, self.telephone))
     self.telephone.setObjectName("telephone")
+    if action == CommonResources.UPDATE:
+        self.telephone.setText(selected_data[13])
     self.form.addRow(title, self.telephone)
 
     title = QLabel("Положение")
@@ -297,6 +349,8 @@ def createCaseForm(self, action):
     title = QLabel("Тип помощи")
     title.setFont(CommonResources.commonTextFont)
 
+    self.selected_patient = None
+
     self.aid_type = QComboBox()
     self.aid_type.addItems(CommonResources.getAllVariantsFromCatalog("spr_AidType"))
     self.aid_type.setMaximumWidth(600)
@@ -372,6 +426,9 @@ def createVisitForm(self,action):
     self.doctor.clicked.connect(self.selectDoctor)
     self.form.addRow(title, self.doctor)
 
+    self.selected_doctor = None
+
+
     title = QLabel("Случай")
     title.setFont(CommonResources.commonTextFont)
 
@@ -381,6 +438,9 @@ def createVisitForm(self,action):
     self.case.setObjectName("case")
     self.case.clicked.connect(self.selectCase)
     self.form.addRow(title, self.case)
+
+    self.selected_case = None
+
 
     title = QLabel("Дата посещения")
     title.setFont(CommonResources.commonTextFont)
@@ -437,6 +497,7 @@ def createServicesForm(self,action):
     self.visit.setObjectName("visit")
     self.visit.clicked.connect(self.selectVisit)
     self.form.addRow(title, self.visit)
+    self.selected_visit = None
 
     title = QLabel("Услуга")
     title.setFont(CommonResources.commonTextFont)
