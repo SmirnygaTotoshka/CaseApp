@@ -295,6 +295,7 @@ class frm_MainWindow(QMainWindow):
         self.lookup_Data = QLineEdit(self.tab_Data)
         self.lookup_Data.setFont(CommonResources.commonTextFont)
         self.lookup_Data.setPlaceholderText("Поиск")
+        self.lookup_Data.textChanged.connect(self.searchingInTable)
         self.lookup_Data.setMaxLength(100)
 
         self.dataTypeLookup = QComboBox()
@@ -325,6 +326,13 @@ class frm_MainWindow(QMainWindow):
         main_layout.addWidget(self.tv_Data)
         main_layout.addLayout(down_hLayout)
         self.tab_Data.setLayout(main_layout)
+
+    def searchingInTable(self):
+        filter = self.lookup_Data.text()
+        id_col = self.dataTypeLookup.currentIndex()
+        for i in range(self.dataModel.rowCount()):
+            match = filter in self.dataModel.data(self.dataModel.index(i,id_col))
+            self.tv_Data.setRowHidden(i, not match)
 
     def onCatalogChanged(self,index):
         names = self.getTableNames("spr_")
@@ -480,6 +488,7 @@ class frm_SelectRecord(QMainWindow):
         self.lookup_Data = QLineEdit(self.widget)
         self.lookup_Data.setFont(CommonResources.commonTextFont)
         self.lookup_Data.setPlaceholderText("Поиск")
+        self.lookup_Data.textChanged.connect(self.searchingInTable)
         self.lookup_Data.setMaxLength(100)
 
         self.dataTypeLookup = QComboBox(self.widget)
@@ -507,6 +516,13 @@ class frm_SelectRecord(QMainWindow):
 
     def switchEnablingEditingActions(self,flag):
         self.b_selectData.setEnabled(flag)
+
+    def searchingInTable(self):
+        filter = self.lookup_Data.text()
+        id_col = self.dataTypeLookup.currentIndex()
+        for i in range(self.dataModel.rowCount()):
+            match = filter in self.dataModel.data(self.dataModel.index(i,id_col))
+            self.tv_Data.setRowHidden(i, not match)
 
     def selectData(self):
         if self.tv_Data.selectionModel().hasSelection():
