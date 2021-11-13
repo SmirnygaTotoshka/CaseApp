@@ -167,7 +167,10 @@ def saveCase(self, action):
         self.patient.setFocus()
         return False
     rowCount = self.model.rowCount()
-    self.model.insertRows(rowCount, 1)
+    if action == CommonResources.ADD:
+        self.model.insertRows(rowCount, 1)
+    elif action == CommonResources.UPDATE:
+        rowCount = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
     self.model.setData(self.model.index(rowCount, 1), int(self.selected_patient.getText().split(" ")[0]))
 
     key = getPrimaryKey(self, "spr_AidType", "NAME", self.aid_type.itemText(self.aid_type.currentIndex()))
@@ -211,11 +214,20 @@ def saveVisit(self, action):
         self.case.setFocus()
         return False
     q = "INSERT INTO tbl_Visit VALUES(:doctorID,:caseID,CAST(:d AS date),:place,:circ)"
+    if action == CommonResources.ADD:
+        q = "INSERT INTO tbl_Visit VALUES(:doctorID,:caseID,CAST(:d AS date),:place,:circ)"
+    elif action == CommonResources.UPDATE:
+        q = "UPDATE tbl_Visit SET DoctorID=:doctorID,CaseID=:caseID, Date=CAST(:d AS date), VisitPlace=:place,"+ \
+            "Circumstance=:circ WHERE ID = :ID"
     query = QSqlQuery()
     if not query.prepare(q):
         QMessageBox.warning(self, "Ошибка", query.lastError().text(), QMessageBox.Ok)
         print(query.lastQuery())
         return False
+    if action == CommonResources.UPDATE:
+        r = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
+        id = self.parent.dataModel.data(self.parent.dataModel.index(r, 0))
+        query.bindValue(":ID", id)
     query.bindValue(":doctorID", int(self.selected_doctor.getText().split(" ")[0]))
     query.bindValue(":caseID", int(self.selected_case.getText()))
     query.bindValue(":d", self.date.date().toString("yyyyMMdd"))
@@ -245,7 +257,10 @@ def saveServices(self, action):
         self.visit.setFocus()
         return False
     rowCount = self.model.rowCount()
-    self.model.insertRows(rowCount, 1)
+    if action == CommonResources.ADD:
+        self.model.insertRows(rowCount, 1)
+    elif action == CommonResources.UPDATE:
+        rowCount = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
     self.model.setData(self.model.index(rowCount, 1), int(self.selected_visit.getText()))
 
     key = getPrimaryKey(self, "spr_CodeServices", "NAME", self.service.itemText(self.service.currentIndex()))
@@ -277,7 +292,10 @@ def savePassports(self, action):
                                 QMessageBox.Yes | QMessageBox.No)
     if q == QMessageBox.Yes or len(self.address.text()) >= 15:
         rowCount = self.model.rowCount()
-        self.model.insertRows(rowCount, 1)
+        if action == CommonResources.ADD:
+            self.model.insertRows(rowCount, 1)
+        elif action == CommonResources.UPDATE:
+            rowCount = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
         self.model.setData(self.model.index(rowCount, 1), self.number.text().replace(" ", ""))
         self.model.setData(self.model.index(rowCount, 2), self.address.text())
         f = self.model.submitAll()
@@ -297,7 +315,10 @@ def savePolices(self, action):
         QMessageBox.warning(self, "Ошибка", "Введите корректный номер полиса.", QMessageBox.Ok)
         return False
     rowCount = self.model.rowCount()
-    self.model.insertRows(rowCount, 1)
+    if action == CommonResources.ADD:
+        self.model.insertRows(rowCount, 1)
+    elif action == CommonResources.UPDATE:
+        rowCount = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
     self.model.setData(self.model.index(rowCount, 1), self.police_number.text())
     key = getPrimaryKey(self,"spr_SMO", "NAM_SMOP", self.smo.itemText(self.smo.currentIndex()))
     if key is not None:

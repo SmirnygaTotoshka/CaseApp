@@ -372,9 +372,9 @@ class frm_MainWindow(QMainWindow):
 
     def addData(self):
         table_name = self.selectTable.currentData(Qt.UserRole)
-        self.switchEnablingEditingActions(False)
         try:
             self.rec = frm_EditRecord(action = CommonResources.ADD, table_name = table_name, model = self.dataModel, parent = self)
+            self.switchEnablingEditingActions(False)
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", e, QMessageBox.Ok)
 
@@ -389,12 +389,12 @@ class frm_MainWindow(QMainWindow):
 
     def updateData(self):
         table_name = self.selectTable.currentData(Qt.UserRole)
-        self.switchEnablingEditingActions(False)
         try:
             self.rec = frm_EditRecord(action=CommonResources.UPDATE, table_name=table_name, model=self.dataModel,
                                       parent=self)
+            self.switchEnablingEditingActions(False)
         except Exception as e:
-            QMessageBox.warning(self, "Ошибка", e, QMessageBox.Ok)
+            QMessageBox.warning(self, "Ошибка", str(e), QMessageBox.Ok)
 
 
     def getTableNames(self,name:str) -> list:

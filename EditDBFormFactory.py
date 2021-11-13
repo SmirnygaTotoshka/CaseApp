@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QDateEdit, QComboBox, QCheckBox
+from PyQt5.QtSql import QSqlQuery
+from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QDateEdit, QComboBox, QCheckBox, QMessageBox
 
 import CommonResources
 from InfoWidget import InfoAfterSelectWidget
@@ -146,7 +147,7 @@ def createPatientForm(self, action):
         self.selected_passport = InfoAfterSelectWidget(text=selected_data[9])
         self.selected_passport.change.clicked.connect(self.selectPassport)
         self.form.addRow(title, self.selected_passport)
-    else:
+    elif action == CommonResources.ADD:
         self.passport = QPushButton()
         self.passport.setText("Добавить")  # TODO - проверка на наличие
         self.passport.setFont(CommonResources.commonTextFont)
@@ -174,7 +175,7 @@ def createPatientForm(self, action):
         self.selected_police = InfoAfterSelectWidget(text=selected_data[11])
         self.selected_police.change.clicked.connect(self.selectPolice)
         self.form.addRow(title, self.selected_police)
-    else:
+    elif action == CommonResources.ADD:
         self.police = QPushButton()
         self.police.setText("Добавить")  # TODO - проверка на наличие
         self.police.setFont(CommonResources.commonTextFont)
@@ -366,20 +367,47 @@ def createDoctorForm(self, action):
 
 
 def createCaseForm(self, action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
+
     title = QLabel("Пациент")
     title.setFont(CommonResources.commonTextFont)
-
-    self.patient = QPushButton()
-    self.patient.setText("Выбрать")  # TODO - проверка на наличие
-    self.patient.setFont(CommonResources.commonTextFont)
-    self.patient.setObjectName("patient")
-    self.patient.clicked.connect(self.selectPatient)
-    self.form.addRow(title, self.patient)
+    if action == CommonResources.UPDATE:
+        q = QSqlQuery()
+        flag = True
+        if not q.prepare("SELECT ID,Sirname,Name,SecondName FROM tbl_Patients WHERE ID=:id"):
+            flag = False
+        else:
+            q.bindValue(":id",selected_data[1])
+            q.exec()
+            if not q:
+                flag = False
+        if flag:
+            while q.next():
+                text = str(q.value(0)) + " " + str(q.value(1)) + " "+ str(q.value(2)) + " " + str(q.value(3))
+            self.selected_patient = InfoAfterSelectWidget(text=text)
+            self.selected_patient.change.clicked.connect(self.selectPatient)
+            self.form.addRow(title, self.selected_patient)
+        else:
+            QMessageBox.warning(self,"Внимание","Не удалось добавить в форму пациента, потому что\n" + q.lastError().text(),QMessageBox.Ok)
+            self.patient = QPushButton()
+            self.patient.setText("Выбрать")  # TODO - проверка на наличие
+            self.patient.setFont(CommonResources.commonTextFont)
+            self.patient.setObjectName("patient")
+            self.patient.clicked.connect(self.selectPatient)
+            self.form.addRow(title, self.patient)
+            self.selected_patient = None
+    elif action == CommonResources.ADD:
+        self.patient = QPushButton()
+        self.patient.setText("Выбрать")  # TODO - проверка на наличие
+        self.patient.setFont(CommonResources.commonTextFont)
+        self.patient.setObjectName("patient")
+        self.patient.clicked.connect(self.selectPatient)
+        self.form.addRow(title, self.patient)
+        self.selected_patient = None
 
     title = QLabel("Тип помощи")
     title.setFont(CommonResources.commonTextFont)
-
-    self.selected_patient = None
 
     self.aid_type = QComboBox()
     self.aid_type.addItems(CommonResources.getAllVariantsFromCatalog("spr_AidType"))
@@ -387,6 +415,10 @@ def createCaseForm(self, action):
     self.aid_type.setFont(CommonResources.commonTextFont)
     self.aid_type.setCurrentIndex(0)
     self.aid_type.setObjectName("aid_type")
+    if action == CommonResources.UPDATE:
+        i = self.aid_type.findText(selected_data[2], Qt.MatchFixedString)
+        if i >= 0:
+            self.aid_type.setCurrentIndex(i)
     self.form.addRow(title, self.aid_type)
 
     title = QLabel("Цель")
@@ -398,6 +430,10 @@ def createCaseForm(self, action):
     self.purpose.setFont(CommonResources.commonTextFont)
     self.purpose.setCurrentIndex(0)
     self.purpose.setObjectName("purpose")
+    if action == CommonResources.UPDATE:
+        i = self.purpose.findText(selected_data[3], Qt.MatchFixedString)
+        if i >= 0:
+            self.purpose.setCurrentIndex(i)
     self.form.addRow(title, self.purpose)
 
     title = QLabel("Результат")
@@ -409,6 +445,10 @@ def createCaseForm(self, action):
     self.result.setFont(CommonResources.commonTextFont)
     self.result.setCurrentIndex(0)
     self.result.setObjectName("result")
+    if action == CommonResources.UPDATE:
+        i = self.result.findText(selected_data[4], Qt.MatchFixedString)
+        if i >= 0:
+            self.result.setCurrentIndex(i)
     self.form.addRow(title, self.result)
 
     title = QLabel("Диагноз")
@@ -420,6 +460,10 @@ def createCaseForm(self, action):
     self.mkb.setFont(CommonResources.commonTextFont)
     self.mkb.setCurrentIndex(0)
     self.mkb.setObjectName("mkb")
+    if action == CommonResources.UPDATE:
+        i = self.mkb.findText(selected_data[5], Qt.MatchFixedString)
+        if i >= 0:
+            self.mkb.setCurrentIndex(i)
     self.form.addRow(title, self.mkb)
 
     title = QLabel("Тип заболевания")
@@ -430,6 +474,10 @@ def createCaseForm(self, action):
     self.disease_type.setMaximumWidth(600)
     self.disease_type.setFont(CommonResources.commonTextFont)
     self.disease_type.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.disease_type.findText(selected_data[6], Qt.MatchFixedString)
+        if i >= 0:
+            self.disease_type.setCurrentIndex(i)
     self.disease_type.setObjectName("disease_type")
     self.form.addRow(title, self.disease_type)
 
@@ -446,31 +494,83 @@ def createCaseForm(self, action):
     self.form.setSpacing(20)
 
 def createVisitForm(self,action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
     title = QLabel("Доктор")
     title.setFont(CommonResources.commonTextFont)
 
-    self.doctor = QPushButton()
-    self.doctor.setText("Выбрать")  # TODO - проверка на наличие
-    self.doctor.setFont(CommonResources.commonTextFont)
-    self.doctor.setObjectName("doctor")
-    self.doctor.clicked.connect(self.selectDoctor)
-    self.form.addRow(title, self.doctor)
-
-    self.selected_doctor = None
-
+    if action == CommonResources.UPDATE:
+        q = QSqlQuery()
+        flag = True
+        if not q.prepare("SELECT ID,Sirname,Name,SecondName FROM tbl_Doctors WHERE ID=:id"):
+            flag = False
+        else:
+            q.bindValue(":id",selected_data[1])
+            q.exec()
+            if not q:
+                flag = False
+        if flag:
+            while q.next():
+                text = str(q.value(0)) + " " + str(q.value(1)) + " "+ str(q.value(2)) + " " + str(q.value(3))
+            self.selected_doctor = InfoAfterSelectWidget(text=text)
+            self.selected_doctor.change.clicked.connect(self.selectDoctor)
+            self.form.addRow(title, self.selected_doctor)
+        else:
+            QMessageBox.warning(self,"Внимание","Не удалось добавить в форму пациента, потому что\n" + q.lastError().text(),QMessageBox.Ok)
+            self.doctor = QPushButton()
+            self.doctor.setText("Выбрать")  # TODO - проверка на наличие
+            self.doctor.setFont(CommonResources.commonTextFont)
+            self.doctor.setObjectName("doctor")
+            self.doctor.clicked.connect(self.selectDoctor)
+            self.form.addRow(title, self.doctor)
+            self.selected_doctor = None
+    elif action == CommonResources.ADD:
+        self.doctor = QPushButton()
+        self.doctor.setText("Выбрать")  # TODO - проверка на наличие
+        self.doctor.setFont(CommonResources.commonTextFont)
+        self.doctor.setObjectName("doctor")
+        self.doctor.clicked.connect(self.selectDoctor)
+        self.form.addRow(title, self.doctor)
+        self.selected_doctor = None
 
     title = QLabel("Случай")
     title.setFont(CommonResources.commonTextFont)
 
-    self.case = QPushButton()
-    self.case.setText("Выбрать")  # TODO - проверка на наличие
-    self.case.setFont(CommonResources.commonTextFont)
-    self.case.setObjectName("case")
-    self.case.clicked.connect(self.selectCase)
-    self.form.addRow(title, self.case)
-
-    self.selected_case = None
-
+    if action == CommonResources.UPDATE:
+        q = QSqlQuery()
+        flag = True
+        if not q.prepare("SELECT ID FROM tbl_Case WHERE ID=:id"):
+            flag = False
+        else:
+            q.bindValue(":id", selected_data[2])
+            q.exec()
+            if not q:
+                flag = False
+        if flag:
+            while q.next():
+                text = str(q.value(0))
+            self.selected_case = InfoAfterSelectWidget(text=text)
+            self.selected_case.change.clicked.connect(self.selectCase)
+            self.form.addRow(title, self.selected_case)
+        else:
+            QMessageBox.warning(self, "Внимание",
+                                "Не удалось добавить в форму пациента, потому что\n" + q.lastError().text(),
+                                QMessageBox.Ok)
+            self.case = QPushButton()
+            self.case.setText("Выбрать")  # TODO - проверка на наличие
+            self.case.setFont(CommonResources.commonTextFont)
+            self.case.setObjectName("case")
+            self.case.clicked.connect(self.selectCase)
+            self.form.addRow(title, self.case)
+            self.selected_case = None
+    elif action == CommonResources.ADD:
+        self.case = QPushButton()
+        self.case.setText("Выбрать")  # TODO - проверка на наличие
+        self.case.setFont(CommonResources.commonTextFont)
+        self.case.setObjectName("case")
+        self.case.clicked.connect(self.selectCase)
+        self.form.addRow(title, self.case)
+        self.selected_case = None
 
     title = QLabel("Дата посещения")
     title.setFont(CommonResources.commonTextFont)
@@ -481,6 +581,9 @@ def createVisitForm(self,action):
     self.date.setDate(curDateTime)
     self.date.setObjectName("date")
     self.date.setCalendarPopup(True)
+    if action == CommonResources.UPDATE:
+        dates = list(map(int,selected_data[3].split("-")))
+        self.date.setDate(QDate(dates[0],dates[1], dates[2]))
     self.form.addRow(title, self.date)
 
     title = QLabel("Место посещения")
@@ -492,6 +595,10 @@ def createVisitForm(self,action):
     self.visit_place.setFont(CommonResources.commonTextFont)
     self.visit_place.setCurrentIndex(0)
     self.visit_place.setObjectName("visit_place")
+    if action == CommonResources.UPDATE:
+        i = self.visit_place.findText(selected_data[4], Qt.MatchFixedString)
+        if i >= 0:
+            self.visit_place.setCurrentIndex(i)
     self.form.addRow(title, self.visit_place)
 
     title = QLabel("Обстоятельства\n посещения")
@@ -503,6 +610,10 @@ def createVisitForm(self,action):
     self.visit_circumstances.setFont(CommonResources.commonTextFont)
     self.visit_circumstances.setCurrentIndex(0)
     self.visit_circumstances.setObjectName("visit_circumstances")
+    if action == CommonResources.UPDATE:
+        i = self.visit_circumstances.findText(selected_data[5], Qt.MatchFixedString)
+        if i >= 0:
+            self.visit_circumstances.setCurrentIndex(i)
     self.form.addRow(title, self.visit_circumstances)
 
     title = QLabel("Положение")
@@ -518,16 +629,47 @@ def createVisitForm(self,action):
     self.form.setSpacing(20)
 
 def createServicesForm(self,action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
     title = QLabel("Посещение")
     title.setFont(CommonResources.commonTextFont)
 
-    self.visit = QPushButton()
-    self.visit.setText("Выбрать")  # TODO - проверка на наличие
-    self.visit.setFont(CommonResources.commonTextFont)
-    self.visit.setObjectName("visit")
-    self.visit.clicked.connect(self.selectVisit)
-    self.form.addRow(title, self.visit)
-    self.selected_visit = None
+    if action == CommonResources.UPDATE:
+        q = QSqlQuery()
+        flag = True
+        if not q.prepare("SELECT ID FROM tbl_Visit WHERE ID=:id"):
+            flag = False
+        else:
+            q.bindValue(":id", selected_data[1])
+            q.exec()
+            if not q:
+                flag = False
+        if flag:
+            while q.next():
+                text = str(q.value(0))
+            self.selected_visit = InfoAfterSelectWidget(text=text)
+            self.selected_visit.change.clicked.connect(self.selectVisit)
+            self.form.addRow(title, self.selected_visit)
+        else:
+            QMessageBox.warning(self, "Внимание",
+                                "Не удалось добавить в форму пациента, потому что\n" + q.lastError().text(),
+                                QMessageBox.Ok)
+            self.visit = QPushButton()
+            self.visit.setText("Выбрать")  # TODO - проверка на наличие
+            self.visit.setFont(CommonResources.commonTextFont)
+            self.visit.setObjectName("visit")
+            self.visit.clicked.connect(self.selectVisit)
+            self.form.addRow(title, self.visit)
+            self.selected_visit = None
+    elif action == CommonResources.ADD:
+        self.visit = QPushButton()
+        self.visit.setText("Выбрать")  # TODO - проверка на наличие
+        self.visit.setFont(CommonResources.commonTextFont)
+        self.visit.setObjectName("visit")
+        self.visit.clicked.connect(self.selectVisit)
+        self.form.addRow(title, self.visit)
+        self.selected_visit = None
+
 
     title = QLabel("Услуга")
     title.setFont(CommonResources.commonTextFont)
@@ -537,6 +679,10 @@ def createServicesForm(self,action):
     self.service.setMaximumWidth(500)
     self.service.setFont(CommonResources.commonTextFont)
     self.service.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.service.findText(selected_data[2], Qt.MatchFixedString)
+        if i >= 0:
+            self.service.setCurrentIndex(i)
     self.service.setObjectName("service")
     self.form.addRow(title, self.service)
 
@@ -548,6 +694,10 @@ def createServicesForm(self,action):
     self.payment_type.setMaximumWidth(500)
     self.payment_type.setFont(CommonResources.commonTextFont)
     self.payment_type.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.payment_type.findText(selected_data[3], Qt.MatchFixedString)
+        if i >= 0:
+            self.payment_type.setCurrentIndex(i)
     self.payment_type.setObjectName("payment_type")
     self.form.addRow(title, self.payment_type)
 
@@ -564,6 +714,8 @@ def createServicesForm(self,action):
     self.form.setSpacing(20)
 
 def createPassportForm(self, action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
     title = QLabel("Серия и номер")
     title.setFont(CommonResources.commonTextFont)
 
@@ -573,6 +725,8 @@ def createPassportForm(self, action):
     self.number.setValidator(QRegExpValidator(CommonResources.passport_number, self.number))
     self.number.textChanged.connect(self.prettyPassportPrint)
     self.number.setObjectName("number")
+    if action == CommonResources.UPDATE:
+        self.number.setText(selected_data[1])
     self.form.addRow(title, self.number)
 
     title = QLabel("Адрес")
@@ -583,6 +737,8 @@ def createPassportForm(self, action):
     self.address.setValidator(QRegExpValidator(CommonResources.address, self.address))
     self.address.setMaxLength(70)  # TODO - pretty print
     self.address.setObjectName("address")
+    if action == CommonResources.UPDATE:
+        self.address.setText(selected_data[2])
     self.form.addRow(title, self.address)
 
     title = QLabel("Положение")
@@ -598,6 +754,8 @@ def createPassportForm(self, action):
     self.form.setSpacing(20)
 
 def createPoliceForm(self,action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
     title = QLabel("Номер")
     title.setFont(CommonResources.commonTextFont)
 
@@ -606,6 +764,8 @@ def createPoliceForm(self,action):
     self.police_number.setMaxLength(16)  # TODO - pretty print
     self.police_number.setValidator(QRegExpValidator(CommonResources.police_number, self.police_number))
     self.police_number.setObjectName("police_number")
+    if action == CommonResources.UPDATE:
+        self.police_number.setText(selected_data[1])
     self.form.addRow(title, self.police_number)
 
     title = QLabel("СМО")
@@ -617,6 +777,10 @@ def createPoliceForm(self,action):
     self.smo.setFont(CommonResources.commonTextFont)
     self.smo.setCurrentIndex(0)
     self.smo.setObjectName("smo")
+    if action == CommonResources.UPDATE:
+        i = self.smo.findText(selected_data[2], Qt.MatchFixedString)
+        if i >= 0:
+            self.smo.setCurrentIndex(i)
     self.form.addRow(title, self.smo)
 
     title = QLabel("Положение")
