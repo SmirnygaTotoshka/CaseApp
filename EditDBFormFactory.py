@@ -224,6 +224,9 @@ def createPatientForm(self, action):
 
 
 def createDoctorForm(self, action):
+    if action == CommonResources.UPDATE:
+        selected_data = getSelectedData(self)
+
     title = QLabel("Фамилия")
     title.setFont(CommonResources.commonTextFont)
 
@@ -233,6 +236,8 @@ def createDoctorForm(self, action):
     self.Sirname.setValidator(QRegExpValidator(CommonResources.only_letter, self.Sirname))
     self.Sirname.setObjectName("Sirname")
     self.Sirname.textEdited.connect(self.SirnamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.Sirname.setText(selected_data[1])
     self.form.addRow(title, self.Sirname)
 
     title = QLabel("Имя")
@@ -244,6 +249,8 @@ def createDoctorForm(self, action):
     self.Name.setValidator(QRegExpValidator(CommonResources.only_letter, self.Name))
     self.Name.setObjectName("Name")
     self.Name.textEdited.connect(self.NamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.Name.setText(selected_data[2])
     self.form.addRow(title, self.Name)
 
     title = QLabel("Отчество (при наличии)")
@@ -255,6 +262,8 @@ def createDoctorForm(self, action):
     self.SecondName.setValidator(QRegExpValidator(CommonResources.only_letter, self.SecondName))
     self.SecondName.setObjectName("SecondName")
     self.SecondName.textEdited.connect(self.SecondNamefirstToUpper)
+    if action == CommonResources.UPDATE:
+        self.SecondName.setText(selected_data[3])
     self.form.addRow(title, self.SecondName)
 
     title = QLabel("Пол")
@@ -266,6 +275,10 @@ def createDoctorForm(self, action):
     self.sex.setObjectName("sex")
     self.sex.setFixedWidth(500)
     self.sex.setCurrentIndex(0)
+    if action == CommonResources.UPDATE:
+        i = self.sex.findText(selected_data[4], Qt.MatchFixedString)
+        if i >= 0:
+            self.sex.setCurrentIndex(i)
     self.form.addRow(title, self.sex)
 
     title = QLabel("Дата рождения")
@@ -277,6 +290,9 @@ def createDoctorForm(self, action):
     self.birthday.setDate(curDateTime.addYears(-18))
     self.birthday.setObjectName("birthday")
     self.birthday.setCalendarPopup(True)
+    if action == CommonResources.UPDATE:
+        dates = list(map(int,selected_data[5].split("-")))
+        self.birthday.setDate(QDate(dates[0],dates[1], dates[2]))
     self.form.addRow(title, self.birthday)
 
     title = QLabel("Должность")
@@ -288,6 +304,10 @@ def createDoctorForm(self, action):
     self.position.setFont(CommonResources.commonTextFont)
     self.position.setCurrentIndex(0)
     self.position.setObjectName("position")
+    if action == CommonResources.UPDATE:
+        i = self.position.findText(selected_data[6], Qt.MatchFixedString)
+        if i >= 0:
+            self.position.setCurrentIndex(i)
     self.form.addRow(title, self.position)
 
     title = QLabel("Специальность")
@@ -299,6 +319,10 @@ def createDoctorForm(self, action):
     self.speciality.setFont(CommonResources.commonTextFont)
     self.speciality.setCurrentIndex(0)
     self.speciality.setObjectName("speciality")
+    if action == CommonResources.UPDATE:
+        i = self.speciality.findText(selected_data[7], Qt.MatchFixedString)
+        if i >= 0:
+            self.speciality.setCurrentIndex(i)
     self.form.addRow(title, self.speciality)
 
     title = QLabel("Отделение")
@@ -310,6 +334,10 @@ def createDoctorForm(self, action):
     self.department.setFont(CommonResources.commonTextFont)
     self.department.setCurrentIndex(0)
     self.department.setObjectName("department")
+    if action == CommonResources.UPDATE:
+        i = self.department.findText(selected_data[8], Qt.MatchFixedString)
+        if i >= 0:
+            self.department.setCurrentIndex(i)
     self.form.addRow(title, self.department)
 
     title = QLabel("Телефон")
@@ -320,6 +348,8 @@ def createDoctorForm(self, action):
     self.telephone.setMaxLength(12)  # TODO - pretty print
     self.telephone.setValidator(QRegExpValidator(CommonResources.telephone, self.telephone))
     self.telephone.setObjectName("telephone")
+    if action == CommonResources.UPDATE:
+        self.telephone.setText(selected_data[9])
     self.form.addRow(title, self.telephone)
 
     title = QLabel("Положение")

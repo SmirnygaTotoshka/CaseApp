@@ -35,7 +35,10 @@ def savePatient(self, action):
             "PassportID=:PassportID,SnilsID=:SnilsID,PoliceID=:PoliceID,FamilyStatus=:FamilyStatus,Telephone=:Telephone " + \
             "WHERE ID = :ID"
     add = QSqlQuery()
-    add.prepare(query)
+    if not add.prepare(query):
+        QMessageBox.warning(self, "Ошибка", add.lastError().text(), QMessageBox.Ok)
+        print(add.lastQuery())
+        return False
     if action == CommonResources.UPDATE:
         r = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
         id = self.parent.dataModel.data(self.parent.dataModel.index(r,0))
@@ -110,12 +113,20 @@ def saveDoctor(self, action):
         QMessageBox.warning(self, "Ошибка", "Введите телефон.", QMessageBox.Ok)
         self.telephone.setFocus()
         return False
-    q = "INSERT INTO tbl_Doctors VALUES(:sirname,:name,:secondname,:sex,CAST(:birthday AS date),:pos,:spec,:dep,:tel)"
+    if action == CommonResources.ADD:
+        q = "INSERT INTO tbl_Doctors VALUES(:sirname,:name,:secondname,:sex,CAST(:birthday AS date),:pos,:spec,:dep,:tel)"
+    else:
+        q = "UPDATE tbl_Doctors SET Sirname=:sirname,Name=:name,SecondName=:secondname,Sex=:sex,Birthday=:birthday," +\
+            "Position=:pos,Speciality=:spec,Department=:dep,Telephone=:tel WHERE ID = :ID"
     query = QSqlQuery()
     if not query.prepare(q):
         QMessageBox.warning(self, "Ошибка", query.lastError().text(), QMessageBox.Ok)
         print(query.lastQuery())
         return False
+    if action == CommonResources.UPDATE:
+        r = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
+        id = self.parent.dataModel.data(self.parent.dataModel.index(r,0))
+        query.bindValue(":ID",id)
     query.bindValue(":sirname", self.Sirname.text())
     query.bindValue(":name", self.Name.text())
     query.bindValue(":secondname", self.SecondName.text())
