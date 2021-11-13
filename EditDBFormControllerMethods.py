@@ -1,6 +1,8 @@
 from PyQt5.QtSql import QSqlQuery
 from PyQt5.QtWidgets import QMessageBox
 
+import CommonResources
+
 
 def savePatient(self, action):
     if len(self.Sirname.text()) == 0:
@@ -23,11 +25,21 @@ def savePatient(self, action):
         QMessageBox.warning(self, "Ошибка", "Выберите полис.", QMessageBox.Ok)
         self.police.setFocus()
         return False
-    query = "INSERT INTO tbl_Patients (Sirname,Name, SecondName, Sex, Birthday, Priviledge, Employment, Workplace," + \
+    if action == CommonResources.ADD:
+        query = "INSERT INTO tbl_Patients (Sirname,Name, SecondName, Sex, Birthday, Priviledge, Employment, Workplace," + \
             "PassportID,SnilsID,PoliceID,FamilyStatus,Telephone) VALUES (:Sirname,:Name, :SecondName, :Sex, CAST(:Birthday AS date), :Priviledge, :Employment, :Workplace," + \
             ":PassportID,:SnilsID,:PoliceID,:FamilyStatus,:Telephone)"
+    elif action == CommonResources.UPDATE:
+        query = "UPDATE tbl_Patients SET Sirname=:Sirname,Name=:Name, SecondName=:SecondName, Sex=:Sex, Birthday=CAST(:Birthday AS date)," +\
+                " Priviledge=:Priviledge, Employment=:Employment, Workplace=:Workplace," + \
+            "PassportID=:PassportID,SnilsID=:SnilsID,PoliceID=:PoliceID,FamilyStatus=:FamilyStatus,Telephone=:Telephone " + \
+            "WHERE ID = :ID"
     add = QSqlQuery()
     add.prepare(query)
+    if action == CommonResources.UPDATE:
+        r = self.parent.tv_Data.selectionModel().selectedRows()[0].row()
+        id = self.parent.dataModel.data(self.parent.dataModel.index(r,0))
+        add.bindValue(":ID",id)
     add.bindValue(":Sirname", self.Sirname.text())
     add.bindValue(":Name", self.Name.text())
     if self.SecondName.text() == "":
