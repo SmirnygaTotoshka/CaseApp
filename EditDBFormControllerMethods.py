@@ -185,7 +185,7 @@ def saveCase(self, action):
     if key is not None:
         self.model.setData(self.model.index(rowCount, 4), key[0])
 
-    key = getPrimaryKey(self, "spr_MKB", "MKB_NAME", self.mkb.itemText(self.mkb.currentIndex()))
+    key = getPrimaryKey(self, "spr_MKB", "MKB_CODE", self.selected_mkb.getText().split(" ")[0])
     if key is not None:
         self.model.setData(self.model.index(rowCount, 5), key[0])
 
@@ -353,4 +353,7 @@ def getPrimaryKey(self, table, column, value):
     values = []
     while (qsql.next()):
         values.append(qsql.value(0))
-    return values
+    if len(values)== 0:
+        return None
+    else:
+        return values

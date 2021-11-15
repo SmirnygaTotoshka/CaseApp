@@ -454,17 +454,51 @@ def createCaseForm(self, action):
     title = QLabel("Диагноз")
     title.setFont(CommonResources.commonTextFont)
 
-    self.mkb = QComboBox()
-    self.mkb.addItems(CommonResources.getAllVariantsFromCatalog("spr_MKB", 2))
-    self.mkb.setMaximumWidth(600)
-    self.mkb.setFont(CommonResources.commonTextFont)
-    self.mkb.setCurrentIndex(0)
-    self.mkb.setObjectName("mkb")
     if action == CommonResources.UPDATE:
-        i = self.mkb.findText(selected_data[5], Qt.MatchFixedString)
-        if i >= 0:
-            self.mkb.setCurrentIndex(i)
-    self.form.addRow(title, self.mkb)
+        q = QSqlQuery()
+        flag = True
+        if not q.prepare("SELECT MKB_CODE,MKB_NAME FROM spr_MKB WHERE MKB_CODE=:c"):
+            flag = False
+        else:
+            q.bindValue(":c",selected_data[5])
+            q.exec()
+            if not q:
+                flag = False
+        if flag:
+            while q.next():
+                text = str(q.value(0)) + " " + str(q.value(1))
+            self.selected_mkb = InfoAfterSelectWidget(text=text)
+            self.selected_mkb.change.clicked.connect(self.selectMKB)
+            self.form.addRow(title, self.selected_mkb)
+        else:
+            QMessageBox.warning(self,"Внимание","Не удалось добавить в форму пациента, потому что\n" + q.lastError().text(),QMessageBox.Ok)
+            self.mkb = QPushButton()
+            self.mkb.setText("Выбрать")  # TODO - проверка на наличие
+            self.mkb.setFont(CommonResources.commonTextFont)
+            self.mkb.setObjectName("mkb")
+            self.mkb.clicked.connect(self.selectMKB)
+            self.form.addRow(title, self.mkb)
+            self.selected_mkb = None
+    elif action == CommonResources.ADD:
+        self.mkb = QPushButton()
+        self.mkb.setText("Выбрать")  # TODO - проверка на наличие
+        self.mkb.setFont(CommonResources.commonTextFont)
+        self.mkb.setObjectName("mkb")
+        self.mkb.clicked.connect(self.selectMKB)
+        self.form.addRow(title, self.mkb)
+        self.selected_mkb = None
+
+    # self.mkb = QComboBox()
+    # self.mkb.addItems(CommonResources.getAllVariantsFromCatalog("spr_MKB", 2))
+    # self.mkb.setMaximumWidth(600)
+    # self.mkb.setFont(CommonResources.commonTextFont)
+    # self.mkb.setCurrentIndex(0)
+    # self.mkb.setObjectName("mkb")
+    # if action == CommonResources.UPDATE:
+    #     i = self.mkb.findText(selected_data[5], Qt.MatchFixedString)
+    #     if i >= 0:
+    #         self.mkb.setCurrentIndex(i)
+    # self.form.addRow(title, self.mkb)
 
     title = QLabel("Тип заболевания")
     title.setFont(CommonResources.commonTextFont)

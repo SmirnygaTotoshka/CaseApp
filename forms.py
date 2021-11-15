@@ -106,6 +106,10 @@ class frm_EditRecord(QMainWindow):
         self.SecondName.setText(text.capitalize())
 
 
+    def selectMKB(self):
+        self.recMKB = frm_SelectRecord("spr_MKB","МКБ-10", self)
+        self.save.setEnabled(False)
+
     def selectPassport(self):
         self.recPassport = frm_SelectRecord("tbl_Passports","Паспорта", self)
         self.save.setEnabled(False)
@@ -295,11 +299,12 @@ class frm_MainWindow(QMainWindow):
         self.lookup_Data = QLineEdit(self.tab_Data)
         self.lookup_Data.setFont(CommonResources.commonTextFont)
         self.lookup_Data.setPlaceholderText("Поиск")
-        self.lookup_Data.textChanged.connect(self.searchingInTable)
+        self.lookup_Data.editingFinished.connect(self.searchingInTable)
         self.lookup_Data.setMaxLength(100)
 
         self.dataTypeLookup = QComboBox()
         self.dataTypeLookup.addItems(self.headers["tbl_Patients"])
+        #self.dataTypeLookup.currentIndexChanged.connect(self.searchingInTable)
         #self.dataTypeLookup.currentIndexChanged.connect(self.onEventTypeChanged)
         self.dataTypeLookup.setCurrentIndex(1)
 
@@ -328,11 +333,12 @@ class frm_MainWindow(QMainWindow):
         self.tab_Data.setLayout(main_layout)
 
     def searchingInTable(self):
-        filter = self.lookup_Data.text()
+        filter = self.lookup_Data.text().lower()
         id_col = self.dataTypeLookup.currentIndex()
-        for i in range(self.dataModel.rowCount()):
-            match = filter in self.dataModel.data(self.dataModel.index(i,id_col))
-            self.tv_Data.setRowHidden(i, not match)
+        if id_col != -1:
+            for i in range(self.dataModel.rowCount()):
+                match = filter in str(self.dataModel.data(self.dataModel.index(i,id_col))).lower()
+                self.tv_Data.setRowHidden(i, not match)
 
     def onCatalogChanged(self,index):
         names = self.getTableNames("spr_")
@@ -376,6 +382,7 @@ class frm_MainWindow(QMainWindow):
         self.dataModel.select()
         self.dataTypeLookup.clear()
         self.dataTypeLookup.addItems(self.headers[table_name])
+        self.dataTypeLookup.setCurrentIndex(1)
 
 
     def addData(self):
@@ -451,6 +458,7 @@ class frm_SelectRecord(QMainWindow):
             "tbl_Services": ["ИД", "ИД посещения", "Услуга", "Тип оплаты"],
             "tbl_Passports": ["ИД", "Серия/номер", "Адрес"],
             "tbl_Polices": ["ИД", "Номер", "СМО"],
+            "spr_MKB":["ИД","Код","Заболевание"]
         }
         self.setWindowTitle(pretty_name)
         self.widget = QWidget()
@@ -488,13 +496,13 @@ class frm_SelectRecord(QMainWindow):
         self.lookup_Data = QLineEdit(self.widget)
         self.lookup_Data.setFont(CommonResources.commonTextFont)
         self.lookup_Data.setPlaceholderText("Поиск")
-        self.lookup_Data.textChanged.connect(self.searchingInTable)
+        self.lookup_Data.editingFinished.connect(self.searchingInTable)
         self.lookup_Data.setMaxLength(100)
 
         self.dataTypeLookup = QComboBox(self.widget)
         self.dataTypeLookup.addItems(self.headers[table_name])
         self.dataTypeLookup.setFont(CommonResources.commonTextFont)
-        # self.dataTypeLookup.currentIndexChanged.connect(self.onEventTypeChanged)
+        #self.dataTypeLookup.currentIndexChanged.connect(self.searchingInTable)
         self.dataTypeLookup.setCurrentIndex(1)
 
         main_layout = QVBoxLayout()
@@ -520,9 +528,10 @@ class frm_SelectRecord(QMainWindow):
     def searchingInTable(self):
         filter = self.lookup_Data.text()
         id_col = self.dataTypeLookup.currentIndex()
-        for i in range(self.dataModel.rowCount()):
-            match = filter in self.dataModel.data(self.dataModel.index(i,id_col))
-            self.tv_Data.setRowHidden(i, not match)
+        if id_col != -1:
+            for i in range(self.dataModel.rowCount()):
+                match = filter in self.dataModel.data(self.dataModel.index(i,id_col))
+                self.tv_Data.setRowHidden(i, not match)
 
     def selectData(self):
         if self.tv_Data.selectionModel().hasSelection():
@@ -585,6 +594,17 @@ class frm_SelectRecord(QMainWindow):
                 title = QLabel("Посещение")
                 title.setFont(CommonResources.commonTextFont)
                 self.parent.form.insertRow(0, title, self.parent.selected_visit)
+                self.close()
+            elif self.table_name == "spr_MKB":
+                row = self.tv_Data.selectionModel().selectedRows()
+                diagnos = str(self.dataModel.data(self.dataModel.index(row[0].row(), 1))) + " " + str(
+                    self.dataModel.data(self.dataModel.index(row[0].row(), 2)))
+                self.parent.selected_mkb = InfoAfterSelectWidget(text=diagnos)
+                self.parent.selected_mkb.change.clicked.connect(self.parent.selectMKB)
+                self.parent.form.removeRow(4)
+                title = QLabel("Пациент")
+                title.setFont(CommonResources.commonTextFont)
+                self.parent.form.insertRow(4, title, self.parent.selected_mkb)
                 self.close()
         else:
             QMessageBox.warning(self, "Ошибка", "Выберите запись", QMessageBox.Ok)
